@@ -17,11 +17,11 @@ var childProcess = require('child_process'),
     sequence = require('sequence'),
     zbar;
 
-module.exports.start = function(opts){
+module.exports.start = function(options){
     // spawn the QR code scanner
     var decoded,
         network,
-        opts = (opts === undefined) ? {} : opts,
+        opts = (opts === undefined) ? {} : options,
         wpaConfigLocation = __dirname + '/wpa_supplicant.conf';
 
     zbar = childProcess.spawn('zbarcam', ['--nodisplay']);
@@ -43,16 +43,16 @@ module.exports.start = function(opts){
 
         // set the network configuration for wpa_supplicant
         network = 'network{\n' +
-        '\tssid="' + decoded.ssid + '"\n' + 
-        '\tpsk="' + decoded.psk + '"\n' + 
+        '\tssid="' + decoded.ssid + '"\n' +
+        '\tpsk="' + decoded.psk + '"\n' +
         '}';
 
         fs.writeFileSync(wpaConfigLocation, network);
 
         sequence(this).then(function(next){
             // run wpa_supplicant to connect to the network
-            childProcess.exec('wpa_supplicant', 
-            ['-B', '-iwlan0', '-c/etc/wpa_supplicant.conf', '-Dwext'], 
+            childProcess.exec('wpa_supplicant',
+            ['-B', '-iwlan0', '-c/etc/wpa_supplicant.conf', '-Dwext'],
             function(err, stdout, stderr){
                 console.log('err: ' + err);
                 console.log('stdout: ' + stdout);
@@ -70,11 +70,11 @@ module.exports.start = function(opts){
         });
         
     });
-}
+};
 
 module.exports.stop = function(){
     if (zbar === undefined){
         return;
     }
     return zbar.kill();
-}
+};
