@@ -41,10 +41,6 @@ module.exports.start = function(opts){
             return decoded;
         }
 
-
-        // don't connect yet
-        return decoded;
-
         // set the network configuration for wpa_supplicant
         network = 'network{\n' +
         '\tssid="' + decoded.ssid + '"\n' + 
@@ -77,8 +73,8 @@ module.exports.start = function(opts){
 }
 
 module.exports.stop = function(){
-    zbar.kill();
+    if (zbar === undefined){
+        return;
+    }
+    return zbar.kill();
 }
-
-
-
