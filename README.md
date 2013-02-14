@@ -7,10 +7,12 @@ node.js application to connect to a wireless network using credentials read from
 installation
 ------------
 
-sudo apt-get install zbar-tools
+  sudo apt-get install zbar-tools
+  npm install qr2wifi
+  
+and then in your code
 
-git clone
+  var qr2wifi = require('qr2wifi');
+  qr2wifi.start();
 
-npm install 
 
-npm start
