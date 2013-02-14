@@ -8,6 +8,9 @@ installation
 ------------
 
 sudo apt-get install zbar-tools
+
 git clone
+
 npm install 
+
 npm start
