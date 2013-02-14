@@ -1,0 +1,9 @@
+{
+  "name": "qr2wifi",
+  "description": "qr code decoder -> wifi connection with wpa_supplicant",
+  "version": "0.0.1",
+  "author": "drewbharris",
+  "dependencies": {
+    "sequence": "2.2.1"
+  }
+}

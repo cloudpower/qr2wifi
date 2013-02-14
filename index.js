@@ -1,48 +1,83 @@
+// qr2wifi
+// tested only on Ubuntu/Debian
+// ensure that you've install zbar-tools and wpa_supplicant first.
+//
+// takes an options object of the form:
+//
+// opts = {
+//     'attempt_connection': false
+// }
+//
+// attempt_connection is by default true. set it to false to skip
+// wifi connection
+
+
 var childProcess = require('child_process'),
-	fs = require('fs'),
-	sequence = require('sequence');
+    fs = require('fs'),
+    sequence = require('sequence'),
+    zbar;
 
-module.exports.start = function(){
-	// spawn the QR code scanner
-	var zbar = childProcess.spawn('zbarcam', ['--nodisplay']),
-	    decoded,
-	    network;
+module.exports.start = function(opts){
+    // spawn the QR code scanner
+    var decoded,
+        network,
+        opts = (opts === undefined) ? {} : opts,
+        wpaConfigLocation = __dirname + '/wpa_supplicant.conf';
 
-	zbar.stdout.on('data', function(data){
+    zbar = childProcess.spawn('zbarcam', ['--nodisplay']);
 
-		// pull the JSON object out of the decoded QR code
-	    decoded = JSON.parse(data.toString().split('QR-Code:')[1]);
-	    // kill the QR code scanner
-	    zbar.kill();
+    zbar.stdout.on('data', function(data){
 
-	    // set the network configuration for wpa_supplicant
-	    network = 'network{\n' +
-	    '\tssid="' + decoded.ssid + '"\n' + 
-	    '\tpsk="' + decoded.psk + '"\n' + 
-	    '}';
-	    fs.writeFileSync('/etc/wpa_supplicant.conf', network);
+        // pull the JSON object out of the decoded QR code
+        decoded = JSON.parse(data.toString().split('QR-Code:')[1]);
+        // kill the QR codee scanner
+        zbar.kill();
 
-	    sequence(this).then(function(next){
-	    	// run wpa_supplicant to connect to the network
-	    	childProcess.exec('wpa_supplicant', 
-	    	['-B', '-iwlan0', '-c/etc/wpa_supplicant.conf', '-Dwext'], 
-	    	function(err, stdout, stderr){
-	    		console.log('err: ' + err);
-	    		console.log('stdout: ' + stdout);
-	    		console.log('stderr:' + stderr);
-	    		next();
-	    	});
-	    }).then(function(next){
-	    	// get a network address with dhcp
-	    	childProcess.exec('dhclient', ['wlan0'], function(err, stdout, stderr){
-	    		console.log('err: ' + err);
-	    		console.log('stdout: ' + stdout);
-	    		console.log('stderr:' + stderr);
-	    		next();
-	    	});
-	    });
-	    
-	});
+        console.log('got data: ');
+        console.log(decoded);
+
+        // if we're not going to connect, just return the qr decoded data
+        if (opts.hasOwnProperty('attempt_connection') && opts.attempt_connection === false){
+            return decoded;
+        }
+
+
+        // don't connect yet
+        return decoded;
+
+        // set the network configuration for wpa_supplicant
+        network = 'network{\n' +
+        '\tssid="' + decoded.ssid + '"\n' + 
+        '\tpsk="' + decoded.psk + '"\n' + 
+        '}';
+
+        fs.writeFileSync(wpaConfigLocation, network);
+
+        sequence(this).then(function(next){
+            // run wpa_supplicant to connect to the network
+            childProcess.exec('wpa_supplicant', 
+            ['-B', '-iwlan0', '-c/etc/wpa_supplicant.conf', '-Dwext'], 
+            function(err, stdout, stderr){
+                console.log('err: ' + err);
+                console.log('stdout: ' + stdout);
+                console.log('stderr:' + stderr);
+                next();
+            });
+        }).then(function(next){
+            // get a network address with dhcp
+            childProcess.exec('dhclient', ['wlan0'], function(err, stdout, stderr){
+                console.log('err: ' + err);
+                console.log('stdout: ' + stdout);
+                console.log('stderr:' + stderr);
+                next();
+            });
+        });
+        
+    });
+}
+
+module.exports.stop = function(){
+    zbar.kill();
 }
 
 
