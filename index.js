@@ -25,7 +25,7 @@ module.exports.start = function(options){
     // spawn the QR code scanner
     var decoded,
         network,
-        opts = (opts === undefined) ? {} : options,
+        opts = (options === undefined) ? {} : options,
         wpaConfigLocation = __dirname + '/wpa_supplicant.conf',
         attemptConnection = (opts.hasOwnProperty('attempt_connection') &&
             opts.attempt_connection === true) ? true : false,
@@ -57,8 +57,8 @@ module.exports.start = function(options){
 
         // set the network configuration for wpa_supplicant
         network = 'network{\n' +
-        '\tssid="' + decoded.ssid + '"\n' +
-        '\tpsk="' + decoded.psk + '"\n' +
+        '\tssid="' + decoded.SSID + '"\n' +
+        '\tpsk="' + decoded.PSK + '"\n' +
         '}';
 
         fs.writeFileSync(wpaConfigLocation, network);
