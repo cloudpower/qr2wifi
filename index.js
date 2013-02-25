@@ -1,3 +1,5 @@
+"use strict";
+
 // qr2wifi
 // tested only on Ubuntu/Debian
 // ensure that you've install zbar-tools and wpa_supplicant first.
@@ -5,11 +7,13 @@
 // takes an options object of the form:
 //
 // opts = {
-//     'attempt_connection': false
+//     'attempt_connection': true,
+//     'video_device': '/dev/video1'
 // }
 //
-// attempt_connection is by default true. set it to false to skip
-// wifi connection
+// attempt_connection is by default false. set it to true to attempt
+// wifi connection with wpa_supplicant
+// video_device is by default /dev/video0
 
 
 var childProcess = require('child_process'),
@@ -23,11 +27,13 @@ module.exports.start = function(options){
         network,
         opts = (opts === undefined) ? {} : options,
         wpaConfigLocation = __dirname + '/wpa_supplicant.conf',
-        attemptConnection = (opts.hasOwnProperty('attempt_connection') && opts.attempt_connection === true) ? true : false;
+        attemptConnection = (opts.hasOwnProperty('attempt_connection') &&
+            opts.attempt_connection === true) ? true : false,
+        webcam = opts.video_device || '/dev/video0';
 
     console.log('spawning QR code scanner...');
 
-    zbar = childProcess.spawn('zbarcam', ['--nodisplay']);
+    zbar = childProcess.spawn('zbarcam', [webcam, '--nodisplay']);
 
     zbar.stdout.on('data', function(data){
 
