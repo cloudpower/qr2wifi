@@ -31,6 +31,7 @@ module.exports.start = function(options){
             opts.attempt_connection === true) ? true : false,
         webcam = opts.video_device || '/dev/video0';
 
+
     console.log('spawning QR code scanner...');
 
     zbar = childProcess.spawn('zbarcam', [webcam, '--nodisplay']);
@@ -42,15 +43,17 @@ module.exports.start = function(options){
         // kill the QR codee scanner
         zbar.kill();
 
-        console.log('QR data: ' + decoded);
+        console.log('QR data: ' + JSON.stringify(decoded));
 
         // if we're not going to connect, just return the qr decoded data
-        if (attemptConnection){
+        if (!attemptConnection){
             console.log('not attempting connection');
             return decoded;
         }
 
         console.log('attempting connection to network ' + decoded.SSID);
+
+        return;
 
         // set the network configuration for wpa_supplicant
         network = 'network{\n' +
