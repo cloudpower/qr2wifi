@@ -22,7 +22,10 @@ module.exports.start = function(options){
     var decoded,
         network,
         opts = (opts === undefined) ? {} : options,
-        wpaConfigLocation = __dirname + '/wpa_supplicant.conf';
+        wpaConfigLocation = __dirname + '/wpa_supplicant.conf',
+        attemptConnection = (opts.hasOwnProperty('attempt_connection') && opts.attempt_connection === true) ? true : false;
+
+    console.log('spawning QR code scanner...');
 
     zbar = childProcess.spawn('zbarcam', ['--nodisplay']);
 
@@ -33,13 +36,15 @@ module.exports.start = function(options){
         // kill the QR codee scanner
         zbar.kill();
 
-        console.log('got data: ');
-        console.log(decoded);
+        console.log('QR data: ' + decoded);
 
         // if we're not going to connect, just return the qr decoded data
-        if (opts.hasOwnProperty('attempt_connection') && opts.attempt_connection === false){
+        if (attemptConnection){
+            console.log('not attempting connection');
             return decoded;
         }
+
+        console.log('attempting connection to network ' + decoded.SSID);
 
         // set the network configuration for wpa_supplicant
         network = 'network{\n' +
